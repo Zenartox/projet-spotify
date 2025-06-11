@@ -17,13 +17,11 @@ body {
   overflow-x: hidden;
 } */
 
-/* Empêche les débordements */
 .container, .row, .card, table {
   max-width: 100%;
   box-sizing: border-box;
 }
 
-/* Spécifiquement pour le bloc 'Liste des Morceaux' */
 .card.list-songs {
   margin-left: 20px;
   margin-right: 20px;

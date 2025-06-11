@@ -1,4 +1,3 @@
-// Chargement unique du fichier JSON
 fetch('../data/data.json')
   .then(response => response.json())
   .then(data => {
@@ -297,3 +296,5 @@ function setupSorting() {
     });
   });
 }
+
+
