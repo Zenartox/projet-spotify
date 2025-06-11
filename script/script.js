@@ -111,7 +111,11 @@ function setupModalListener(tracks) {
     document.getElementById('modalExplicit').textContent = track.explicit ? 'Oui' : 'Non';
 
     const albumImg = track.album?.images?.[0]?.url || 'https://via.placeholder.com/300';
-    document.getElementById('modalAlbumImage').src = albumImg;
+    const albumName = track.album?.name || 'album';
+    const modalAlbumImage = document.getElementById('modalAlbumImage');
+    modalAlbumImage.src = albumImg;
+    modalAlbumImage.alt = `${albumName}-cover`;
+
     document.getElementById('modalReleaseDate').textContent = formatDate(track.album?.release_date);
     document.getElementById('modalAlbumPopularity').textContent = `Popularité: ${track.album?.popularity || 0}/100`;
 
@@ -134,7 +138,7 @@ function setupModalListener(tracks) {
       const imgSrc = artist.images?.[0]?.url || 'https://via.placeholder.com/30';
 
       li.innerHTML = `
-        <img src="${imgSrc}" class="rounded-circle me-2" width="30" height="30" onerror="this.src='https://via.placeholder.com/30'">
+        <img src="${imgSrc}" class="rounded-circle me-2" width="30" height="30" onerror="this.src='https://via.placeholder.com/30'" alt="${artist.name}">
         <div>
           <div>${artist.name}</div>
           <small class="text-muted">
@@ -216,6 +220,7 @@ function generatePopularAlbums(data) {
     img.style.height = '200px';
     img.style.objectFit = 'cover';
     img.src = album.images?.[0]?.url || 'https://via.placeholder.com/300';
+    img.alt = `${album.name}-cover`;
 
     const body = document.createElement('div');
     body.className = 'card-body';
