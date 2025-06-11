@@ -1,16 +1,135 @@
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style/style.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet"> <!-- Bootstrap CSS -->
-    <title>Spoti'stat</title>
-  </head>
-  <body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+  <title>Spoti'stat</title>
+</head>
+<body>
+  <header class="bg-primary text-white text-center py-5 w-100">
+    <div class="container">
+      <h1 class="display-4"><b>Les musiques de Esteban</b></h1>
+      <p class="lead">Regardes en l'air, les étoiles sont là, silencieuses mais brillantes</p>
+    </div>
+  </header>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script> <!-- Bootstrap JS -->
-    <script src="script/script.js"></script>
-  </body>
+  <div class="container">
+    <div class="row mt-4">
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header bg-primary text-white">
+            <b>Top 10 des Artistes</b>
+          </div>
+          <div class="card-body">
+            <h5 class="card-title">Top 10 artistes (point par titre)</h5>
+            <canvas id="topArtistsChart" class="chart-container"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header bg-success text-white">
+            <b>Genres les plus utilisés</b>
+          </div>
+          <div class="card-body">
+            <h5 class="card-title">Liste des genres utilisés</h5>
+            <canvas id="genreDistributionChart" class="chart-container"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des morceaux -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card shadow-sm h-100">
+          <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h2 class="fs-4 m-0 fw-bold">Liste des Morceaux</h2>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-light text-primary" id="songCount">0</span>
+              <div class="input-group input-group-sm" style="width: 200px;">
+                <span class="input-group-text bg-white text-primary">
+                  <i class="bi bi-search"></i>
+                </span>
+                <input type="text" id="searchInput" class="form-control" placeholder="Rechercher..." />
+              </div>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-striped table-hover mb-0">
+                <thead class="table-light sticky-top">
+                  <tr>
+                    <th scope="col" class="sortable" data-sort="titre">Titre</th>
+                    <th scope="col" class="sortable" data-sort="artiste">Artiste</th>
+                    <th scope="col" class="sortable" data-sort="album">Album</th>
+                    <th scope="col" class="text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="songsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Albums populaires -->
+    <div class="row mt-5">
+      <div class="col-12">
+        <h2 class="mb-4">Albums Populaires</h2>
+        <div class="row row-cols-1 row-cols-md-3 row-cols-lg-6 g-4" id="popularAlbums">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="songDetailModal" tabindex="-1" aria-labelledby="songDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="songDetailModalLabel">Détails de la chanson</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-4 text-center">
+              <img id="modalAlbumImage" src="" class="img-fluid rounded shadow-sm mb-3" alt="Album cover" />
+              <p class="mb-1"><strong>Sortie :</strong> <span id="modalReleaseDate"></span></p>
+              <span id="modalAlbumPopularity" class="badge bg-success"></span>
+            </div>
+            <div class="col-md-8">
+              <h5 id="modalSongTitle" class="fw-bold"></h5>
+              <audio id="modalAudioPreview" controls class="w-100 mb-2"></audio>
+              <p><strong>Durée :</strong> <span id="modalSongDuration"></span></p>
+              <p><strong>Popularité :</strong> <span id="modalSongPopularity"></span>/100</p>
+              <p><strong>Numéro de piste :</strong> <span id="modalTrackNumber"></span></p>
+              <p><strong>Explicit :</strong> <span id="modalExplicit"></span></p>
+              <div id="modalArtistsList"></div>
+              <div class="mt-3">
+                <strong>Genres :</strong>
+                <div id="modalGenres" class="d-flex flex-wrap gap-1 mt-1"></div>
+              </div>
+              <a id="modalSpotifyLink" href="#" class="btn btn-success mt-3" target="_blank">
+                <i class="bi bi-spotify"></i> Ouvrir dans Spotify
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="./script/script.js"></script>
+</body>
 </html>
-

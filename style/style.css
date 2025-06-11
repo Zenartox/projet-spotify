@@ -1,0 +1,30 @@
+body {
+  width: 100%;
+  overflow-x: clip;
+}
+
+.chart-container#genreDistributionChart {
+  display: block;
+  margin-inline: auto;
+  max-inline-size: 300px;
+  max-block-size: 300px;
+}
+
+
+/* html, body {
+  margin: 0;
+  padding: 10px;
+  overflow-x: hidden;
+} */
+
+/* Empêche les débordements */
+.container, .row, .card, table {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Spécifiquement pour le bloc 'Liste des Morceaux' */
+.card.list-songs {
+  margin-left: 20px;
+  margin-right: 20px;
+}
