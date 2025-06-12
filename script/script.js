@@ -30,12 +30,17 @@ function displayTopArtists(data) {
       datasets: [{
         label: 'Nombre de mentions',
         data: topArtists.map(([, count]) => count),
-        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+        backgroundColor: 'rgba(55, 150, 214, 0.5)',
         borderColor: 'rgba(54, 162, 235, 1)',
         borderWidth: 1
       }]
     },
     options: {
+      plugins: {
+        legend: {
+          display: false // <== Légende désactivée ici
+        }
+      },
       indexAxis: 'y',
       responsive: true,
       scales: { x: { beginAtZero: true }, y: { beginAtZero: true } }
@@ -65,13 +70,25 @@ function displayGenreDistribution(data) {
         label: 'Genres musicaux',
         data: [...topGenres.map(([, n]) => n), otherTotal],
         backgroundColor: [
-          '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
-          '#9966FF', '#FF9F40', '#E7E9ED', '#C9CBCF'
+          '#1ABC9C', '#E74C3C', '#2ECC71', '#9B59B6',
+          '#F1C40F', '#34495E', '#E67E22', '#7F8C8D'
         ],
         hoverOffset: 4
       }]
     },
-    options: { responsive: true }
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'right',
+          align: 'center',
+          labels: {
+            usePointStyle: true,
+            padding: 20,
+          }
+        }
+      }
+    }
   });
 }
 
@@ -224,77 +241,104 @@ function generatePopularAlbums(data) {
     const body = document.createElement('div');
     body.className = 'card-body';
 
-    body.innerHTML = `
-      <h5 class="card-title text-truncate">${album.name}</h5>
-      <p class="card-text text-truncate">${album.artistNames[0] || ''}</p>
-      <p class="card-text"><small class="text-muted">${formatDate(album.release_date)}</small></p>
-      <div class="d-flex justify-content-between">
-        <span class="badge bg-primary">${album.trackCount} titres</span>
-        <span class="badge bg-success">${album.popularity}/100</span>
-      </div>
-    `;
+    const title = document.createElement('h6');
+    title.className = 'card-title text-truncate';
+    title.title = album.name;
+    title.textContent = album.name;
+
+    const artists = document.createElement('p');
+    artists.className = 'card-text text-truncate mb-1';
+    artists.textContent = album.artistNames.join(', ');
+
+    const releaseDate = document.createElement('p');
+    releaseDate.className = 'card-text text-muted';
+    releaseDate.textContent = formatDate(album.release_date);
+
+    body.appendChild(title);
+    body.appendChild(artists);
+    body.appendChild(releaseDate);
 
     card.appendChild(img);
     card.appendChild(body);
+
     col.appendChild(card);
     container.appendChild(col);
   });
 }
 
-function formatDuration(ms) {
-  if (!ms) return '0:00';
-  const min = Math.floor(ms / 60000);
-  const sec = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
-  return `${min}:${sec}`;
-}
-
-function formatDate(dateString) {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return `${date.getDate()} ${date.toLocaleString('fr-FR', { month: 'long' })} ${date.getFullYear()}`;
-}
-
 function setupSearch() {
   const input = document.getElementById('searchInput');
   input.addEventListener('input', () => {
-    const term = input.value.toLowerCase();
-    document.querySelectorAll('#songsTableBody tr').forEach(row => {
-      const [title, artist, album] = [...row.cells].map(c => c.textContent.toLowerCase());
-      row.style.display = (title.includes(term) || artist.includes(term) || album.includes(term)) ? '' : 'none';
-    });
+    const searchTerm = input.value.toLowerCase();
+    filterSongs(searchTerm);
   });
+}
+
+function filterSongs(searchTerm) {
+  const rows = document.querySelectorAll('#songsTableBody tr');
+  let visibleCount = 0;
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    const match = Array.from(cells).some(td => td.textContent.toLowerCase().includes(searchTerm));
+    if (match) {
+      row.style.display = '';
+      visibleCount++;
+    } else {
+      row.style.display = 'none';
+    }
+  });
+
+  document.getElementById('songCount').textContent = visibleCount;
 }
 
 function setupSorting() {
-  document.querySelectorAll('.sortable').forEach(header => {
-    header.style.cursor = 'pointer';
+  const headers = document.querySelectorAll('th.sortable');
+  headers.forEach(header => {
     header.addEventListener('click', () => {
-      const tbody = document.getElementById('songsTableBody');
-      const rows = Array.from(tbody.rows);
-      const index = Array.from(header.parentNode.children).indexOf(header);
-      const dir = header.dataset.sortDir === 'asc' ? 'desc' : 'asc';
-      header.dataset.sortDir = dir;
-
-      rows.sort((a, b) => {
-        const valA = a.cells[index].textContent.toLowerCase();
-        const valB = b.cells[index].textContent.toLowerCase();
-        return dir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-      });
-
-      rows.forEach(row => tbody.appendChild(row));
-
-      document.querySelectorAll('.sortable').forEach(h => {
-        h.classList.remove('text-primary');
-        const icon = h.querySelector('i');
-        if (icon) icon.remove();
-      });
-
-      header.classList.add('text-primary');
-      const icon = document.createElement('i');
-      icon.className = dir === 'asc' ? 'bi bi-sort-alpha-down ms-1' : 'bi bi-sort-alpha-up ms-1';
-      header.appendChild(icon);
+      const sortBy = header.getAttribute('data-sort');
+      sortSongsTable(sortBy);
     });
   });
 }
 
+let sortDirection = {};
 
+function sortSongsTable(sortBy) {
+  const tbody = document.getElementById('songsTableBody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+
+  sortDirection[sortBy] = !sortDirection[sortBy]; // toggle asc/desc
+  const direction = sortDirection[sortBy] ? 1 : -1;
+
+  rows.sort((a, b) => {
+    const aText = a.querySelector(`td:nth-child(${getColumnIndex(sortBy)})`).textContent.toLowerCase();
+    const bText = b.querySelector(`td:nth-child(${getColumnIndex(sortBy)})`).textContent.toLowerCase();
+    return aText.localeCompare(bText) * direction;
+  });
+
+  tbody.innerHTML = '';
+  rows.forEach(row => tbody.appendChild(row));
+}
+
+function getColumnIndex(sortBy) {
+  switch(sortBy) {
+    case 'titre': return 1;
+    case 'artiste': return 2;
+    case 'album': return 3;
+    default: return 1;
+  }
+}
+
+function formatDuration(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('fr-FR');
+}
